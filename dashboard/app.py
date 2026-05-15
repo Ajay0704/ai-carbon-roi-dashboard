@@ -262,7 +262,7 @@ row_spacer()
 r3c1, r3c2 = st.columns(2)
 
 with r3c1:
-    chart_title("Premium models cost more but score higher")
+    chart_title("Cost vs Quality")
     if len(fdf) > 0:
         per_model = (
             fdf.groupby("model_id")
@@ -342,9 +342,7 @@ with r3c2:
             .reset_index()
             .sort_values("carbon_g_co2", ascending=True)  # plotly h-bar bottom-up
         )
-        chart_title(
-            f"{top_emitter} leads carbon emissions — route simple tasks to lighter models"
-        )
+        chart_title("Carbon Emissions by Model")
         fig_top = go.Figure()
         fig_top.add_trace(go.Bar(
             x=top_models["carbon_g_co2"], y=top_models["model_id"],
@@ -374,7 +372,7 @@ row_spacer()
 r4c1, r4c2 = st.columns(2)
 
 with r4c1:
-    chart_title("Cost is stable · Carbon follows grid mix")
+    chart_title("Cost & Carbon Trend")
     daily = (
         fdf.set_index("timestamp")
         .resample("D")
