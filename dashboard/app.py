@@ -233,7 +233,7 @@ k6.markdown(kpi_card("Grid Intensity", f"{grid_intensity * 1000:.0f} g/kWh"), un
 st.markdown("<hr style='border: none; border-top: 1px solid #EAECEE; margin: 8px 0 16px 0;'>", unsafe_allow_html=True)
 
 # ── Row 2: MISO fuel mix bar ────────────────────────────────────────────────
-chart_title("MISO Live Grid Fuel Mix")
+chart_title("Live Grid Mix — MISO")
 if fuel_mix_df["MW"].sum() > 0:
     sorted_fuel = fuel_mix_df.sort_values("MW", ascending=False)
     bar_colors = [FUEL_COLORS.get(f, TEXT_MUTED) for f in sorted_fuel["Fuel"]]
@@ -425,7 +425,7 @@ with r4c1:
     footnote("Carbon methodology: token count × model energy estimate × live MISO grid intensity")
 
 with r4c2:
-    chart_title("Recoverable waste: loops & over-provisioned tasks")
+    chart_title("Anomaly & Efficiency Flags")
 
     tab_latency, tab_downgrade = st.tabs(["Latency anomalies", "Downgrade candidates"])
 
