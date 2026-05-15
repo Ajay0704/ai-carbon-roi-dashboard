@@ -1,8 +1,14 @@
 """Snowflake data source for the dashboard with a graceful local fallback.
 
-Authentication uses key-pair (RSA) — no password is stored in .env.
-Set SNOWFLAKE_PRIVATE_KEY_PATH to a PKCS#8 .p8 file. If the key is encrypted,
-also set SNOWFLAKE_PRIVATE_KEY_PASSPHRASE.
+Authentication uses key-pair (RSA). The private key can be supplied two ways:
+
+  1. As a PEM-encoded string via the `SNOWFLAKE_PRIVATE_KEY` secret/env var
+     (used on Streamlit Cloud, where filesystems are ephemeral and secrets
+     are stored in `st.secrets` / injected as env vars).
+  2. As a path to a `.p8` file via `SNOWFLAKE_PRIVATE_KEY_PATH`
+     (used for local development).
+
+If the key is encrypted, also set `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE`.
 """
 
 import os
@@ -17,21 +23,48 @@ load_dotenv()
 _FALLBACK_PATH = Path(__file__).parent.parent / "data" / "raw" / "logs.json"
 
 
+def _get_secret(key: str) -> str | None:
+    """Resolve `key` from st.secrets first, then environment. Returns None if absent."""
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        # st.secrets raises when no secrets.toml exists or outside a Streamlit run
+        pass
+    return os.environ.get(key)
+
+
+def _resolve_private_key_pem() -> bytes:
+    """Return the PEM-encoded private key bytes from secret string or file."""
+    inline = _get_secret("SNOWFLAKE_PRIVATE_KEY")
+    if inline:
+        return inline.encode() if isinstance(inline, str) else inline
+
+    path = _get_secret("SNOWFLAKE_PRIVATE_KEY_PATH")
+    if path:
+        with open(path, "rb") as f:
+            return f.read()
+
+    raise RuntimeError(
+        "No Snowflake private key available — set SNOWFLAKE_PRIVATE_KEY "
+        "(PEM string) or SNOWFLAKE_PRIVATE_KEY_PATH (file path)."
+    )
+
+
 def _load_private_key_bytes() -> bytes:
-    """Read PKCS#8 private key from disk and return its DER-encoded bytes."""
+    """Load the PKCS#8 private key and return its DER-encoded bytes for the connector."""
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
-    key_path = os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"]
-    passphrase = os.environ.get("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE") or None
+    pem = _resolve_private_key_pem()
+    passphrase = _get_secret("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE") or None
     password_bytes = passphrase.encode() if passphrase else None
 
-    with open(key_path, "rb") as f:
-        pk = serialization.load_pem_private_key(
-            f.read(),
-            password=password_bytes,
-            backend=default_backend(),
-        )
+    pk = serialization.load_pem_private_key(
+        pem,
+        password=password_bytes,
+        backend=default_backend(),
+    )
     return pk.private_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PrivateFormat.PKCS8,
@@ -46,15 +79,15 @@ def load_from_snowflake() -> pd.DataFrame:
         import snowflake.connector
 
         conn = snowflake.connector.connect(
-            account=os.environ["SNOWFLAKE_ACCOUNT"],
-            user=os.environ["SNOWFLAKE_USER"],
+            account=_get_secret("SNOWFLAKE_ACCOUNT"),
+            user=_get_secret("SNOWFLAKE_USER"),
             private_key=_load_private_key_bytes(),
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+            database=_get_secret("SNOWFLAKE_DATABASE"),
+            schema=_get_secret("SNOWFLAKE_SCHEMA"),
+            warehouse=_get_secret("SNOWFLAKE_WAREHOUSE"),
             login_timeout=15,
         )
-        table = os.environ.get("SNOWFLAKE_TABLE", "AI_API_LOGS")
+        table = _get_secret("SNOWFLAKE_TABLE") or "AI_API_LOGS"
         try:
             cur = conn.cursor()
             cur.execute(f"SELECT * FROM {table}")
