@@ -158,16 +158,41 @@ if len(date_range) == 2:
 else:
     start_date = end_date = date_range[0]
 
+TASK_DEFAULTS = {
+    "Document Summary":         {"human_mins": 60,  "ai_cost": 0.08},
+    "Data Extraction":          {"human_mins": 30,  "ai_cost": 0.05},
+    "Email Drafting":           {"human_mins": 15,  "ai_cost": 0.02},
+    "Classification":           {"human_mins": 10,  "ai_cost": 0.01},
+    "Legal Document Review":    {"human_mins": 90,  "ai_cost": 0.15},
+    "Financial Report Analysis":{"human_mins": 120, "ai_cost": 0.12},
+    "Code Review":              {"human_mins": 45,  "ai_cost": 0.06},
+    "Customer Support Response":{"human_mins": 20,  "ai_cost": 0.02},
+}
+
 st.sidebar.divider()
 st.sidebar.header("HITL ROI Calculator")
 task_type = st.sidebar.selectbox(
     "Task type",
-    ["Document Summary", "Data Extraction", "Email Drafting", "Classification"],
+    list(TASK_DEFAULTS.keys()),
 )
+st.sidebar.caption("Defaults based on industry estimates — all values editable")
 tasks_per_week = st.sidebar.number_input("Tasks per week", min_value=1, value=50, step=10)
-ai_cost = st.sidebar.number_input("AI cost per task ($)", min_value=0.01, value=2.00, step=0.25, format="%.2f")
+ai_cost = st.sidebar.number_input(
+    "AI cost per task ($)",
+    min_value=0.001,
+    value=TASK_DEFAULTS[task_type]["ai_cost"],
+    step=0.01,
+    format="%.3f",
+    key=f"ai_cost_{task_type}",
+)
 human_rate = st.sidebar.number_input("Human hourly rate ($)", min_value=1, value=65, step=5)
-human_mins = st.sidebar.number_input("Human minutes per task", min_value=1, value=30, step=5)
+human_mins = st.sidebar.number_input(
+    "Human minutes per task",
+    min_value=1,
+    value=TASK_DEFAULTS[task_type]["human_mins"],
+    step=5,
+    key=f"human_mins_{task_type}",
+)
 
 human_cost_total = (human_rate / 60) * human_mins * tasks_per_week
 ai_cost_total = ai_cost * tasks_per_week

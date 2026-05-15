@@ -193,6 +193,3 @@ carbon_g_co2 = energy_kwh × MISO_grid_intensity_kg_per_kwh × 1000
 
 `MISO_grid_intensity` is fetched live every 5 minutes from the [MISO Real-Time Fuel Mix API](https://www.misoenergy.org/) via the [`gridstatus`](https://github.com/gridstatus/gridstatus) library, weighted by lifecycle CO₂ intensity per fuel type (coal 820 g/kWh, natural gas 490, nuclear 12, wind 11, solar 20, etc.). When MISO is unreachable, the dashboard falls back to the US grid average of 386 g CO₂/kWh.
 
-## License
-
-MIT
