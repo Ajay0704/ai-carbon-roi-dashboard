@@ -1,0 +1,3 @@
+# AI Carbon & Human ROI Dashboard
+
+This project provides an interactive dashboard for tracking and analyzing the environmental and human return-on-investment of AI model usage. It ingests raw JSON session logs produced by AI inference endpoints, parses and enriches them with carbon emission estimates (via CodeCarbon), computes ROI metrics such as cost-per-feedback-point and tokens-per-watt, flags anomalous sessions using statistical outlier detection, and presents everything in a Streamlit dashboard with Plotly visualizations — enabling teams to make data-driven decisions about model selection, usage patterns, and sustainability targets.

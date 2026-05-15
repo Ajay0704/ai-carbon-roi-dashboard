@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+*.p8
+*.pem
+*.key
+.DS_Store
+Desktop/
+.claude/
+*.pdf
+*.jpg
+*.png
+*.jpeg

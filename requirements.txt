@@ -1,0 +1,8 @@
+streamlit
+pandas
+requests
+codecarbon
+plotly>=5.0,<6
+gridstatus
+snowflake-connector-python
+python-dotenv
