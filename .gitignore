@@ -11,3 +11,6 @@ Desktop/
 *.jpg
 *.png
 *.jpeg
+
+# Allow documentation images
+!docs/**
