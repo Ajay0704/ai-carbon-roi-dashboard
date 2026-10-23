@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openjobs": {
+      "type": "http",
+      "url": "https://openjobs-3168f222.alpic.live/mcp"
+    }
+  }
+}
