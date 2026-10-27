@@ -4,18 +4,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import pandas as pd
 
-from log_parser import save_processed
 from snowflake_connector import load_from_snowflake
 from carbon_calculator import add_carbon_columns, get_miso_fuel_mix
 from roi_calculator import add_roi_columns
-from anomaly_detector import flag_anomalies
-
-PROCESSED_CSV = Path(__file__).parent.parent / "data" / "processed" / "enriched.csv"
 
 # ── Color system ────────────────────────────────────────────────────────────
 PRIMARY = "#1B4F72"
@@ -23,11 +17,9 @@ SECONDARY = "#2E86C1"
 ACCENT = "#F39C12"
 SUCCESS = "#1E8449"
 DANGER = "#C0392B"
-BG_CARD = "#F8F9FA"
 BORDER = "#D5D8DC"
 GRIDLINE = "#EAECEE"
 TEXT_MUTED = "#7F8C8D"
-CHART_COLORS = ["#1B4F72", "#2E86C1", "#F39C12", "#1E8449", "#C0392B", "#8E44AD"]
 
 FUEL_COLORS = {
     "Wind": "#1E8449",
@@ -136,8 +128,6 @@ def load_and_enrich(grid_intensity_kg_per_kwh: float):
     df = load_from_snowflake()
     df = add_carbon_columns(df, grid_intensity_kg_per_kwh)
     df = add_roi_columns(df)
-    df = flag_anomalies(df)
-    save_processed(df, PROCESSED_CSV)
     return df
 
 
@@ -204,8 +194,8 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 st.sidebar.markdown(
-    f"<div class='footnote' style='margin-top:0.5rem;'>"
-    "ROI = (Human $/hr ÷ 60 × min/task × weekly volume) ÷ (AI cost/task × weekly volume)"
+    "<div class='footnote' style='margin-top:0.5rem;'>"
+    "ROI =(Human $/hr ÷ 60 × min/task × weekly volume) ÷ (AI cost/task × weekly volume)"
     "</div>",
     unsafe_allow_html=True,
 )
@@ -336,7 +326,6 @@ with r3c1:
 with r3c2:
     if len(fdf) > 0:
         carbon_by_model = fdf.groupby("model_id")["carbon_g_co2"].sum().sort_values(ascending=False)
-        top_emitter = carbon_by_model.index[0]
         top_models = (
             carbon_by_model.head(15)
             .reset_index()
