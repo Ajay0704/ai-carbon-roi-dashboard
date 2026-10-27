@@ -10,7 +10,7 @@ An interactive Streamlit dashboard that tells finance and engineering leaders th
 
 - **6 KPI cards** at the top — session count, total carbon (g CO₂), total cost, average user feedback, cost-per-successful-task, live MISO grid intensity (g CO₂/kWh)
 - **Model Efficiency Quadrant** — every model placed on a cost-vs-quality scatter with median crosshair, splitting the plane into "high value / low cost" through "low value / high cost" zones
-- **Top-15 carbon-emitting models** — horizontal bar with absolute g CO₂ labels and a dynamic title ("X leads carbon emissions — route simple tasks to lighter models")
+- **Top-15 carbon-emitting models** — horizontal bar with absolute g CO₂ labels
 - **MISO Live Grid Fuel Mix** — current 5-minute fuel breakdown from the MISO Real-Time API, colored by fuel type
 - **Cost & Carbon Over Time** — dual-axis line chart with 7-day rolling smoothing, raw values as faint dotted lines underneath
 - **Anomaly & Efficiency Flags** — two tabs: 2σ latency anomalies (agent-loop detection) and "Downgrade Candidates" (premium-model sessions with <500-token prompts)
@@ -18,8 +18,6 @@ An interactive Streamlit dashboard that tells finance and engineering leaders th
 - **AI Health Summary** — auto-generated plain-English paragraph summarizing the week's highest emitter, best value-per-success model, anomaly count, estimated savings, and whether the grid is cleaner or dirtier than the US average
 
 ## Architecture
-
-![Architecture diagram](docs/architecture.png)
 
 The full interactive architecture diagram is on Miro: [view board](https://miro.com/app/board/uXjVHTUX6Ps=/)
 
@@ -29,7 +27,7 @@ Five layers, top to bottom:
 |---|---|
 | **5 — Deployment** | GitHub repo · Streamlit Cloud · Snowflake key-pair secret |
 | **1 — Data Sources** | MISO Real-Time API · Snowflake `AI_API_LOGS` (100K rows) |
-| **2 — Python Backend** | `snowflake_connector.py` · `log_parser.py` · `carbon_calculator.py` · `roi_calculator.py` · `anomaly_detector.py` |
+| **2 — Python Backend** | `snowflake_connector.py` · `log_parser.py` · `carbon_calculator.py` · `roi_calculator.py` |
 | **3 — Output** | Processed DataFrame (cached in Streamlit memory, 5-min TTL) |
 | **4 — Streamlit Dashboard** | 7 widgets fed from the processed frame |
 
@@ -41,19 +39,14 @@ Five layers, top to bottom:
 │   └── app.py                 ← Streamlit entry point
 ├── src/
 │   ├── snowflake_connector.py ← Snowflake key-pair auth + local fallback
-│   ├── log_parser.py          ← JSONL/CSV reader
+│   ├── log_parser.py          ← JSONL reader
 │   ├── carbon_calculator.py   ← Token count × MISO grid intensity
-│   ├── roi_calculator.py      ← Per-token pricing for 43 models
-│   └── anomaly_detector.py    ← Z-score flagging
+│   └── roi_calculator.py      ← Per-token pricing for 43 models
 ├── data/
-│   ├── raw/
-│   │   ├── logs.json          ← 100K-record JSONL fallback dataset
-│   │   └── logs.csv           ← Same data, CSV format (for Snowflake upload)
-│   └── processed/
-│       └── enriched.csv       ← Pipeline output cache
+│   └── raw/
+│       └── logs.json          ← 100K-record JSONL fallback dataset
 ├── docs/
-│   ├── dashboard.png          ← Dashboard screenshot
-│   └── architecture.png       ← Miro diagram export
+│   └── dashboard.png          ← Dashboard screenshot
 ├── requirements.txt
 └── README.md
 ```

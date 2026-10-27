@@ -17,7 +17,7 @@ def _pricing(model_id: str) -> tuple[float, float]:
 
 
 def add_roi_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Add cost_usd, roi_score_per_dollar, tokens_per_ms.
+    """Add cost_usd.
 
     Cost is computed per-token with split prompt/completion rates, vectorized
     via per-unique-model rate maps so it stays fast on large dataframes.
@@ -31,6 +31,4 @@ def add_roi_columns(df: pd.DataFrame) -> pd.DataFrame:
         df["prompt_tokens"] * df["model_id"].map(prompt_rate) / 1_000_000
         + df["completion_tokens"] * df["model_id"].map(completion_rate) / 1_000_000
     )
-    df["roi_score_per_dollar"] = df["user_feedback_score"] / df["cost_usd"].clip(lower=1e-9)
-    df["tokens_per_ms"] = df["total_tokens"] / df["latency_ms"].clip(lower=1)
     return df
